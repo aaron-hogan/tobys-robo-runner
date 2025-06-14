@@ -207,6 +207,54 @@
                 font-size: 1.5em;
             }
         }
+        
+        /* Character selection styles */
+        .character-grid {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .character-option {
+            background: #f0f0f0;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 3px solid transparent;
+        }
+        
+        .character-option:hover {
+            transform: scale(1.05);
+            background: #e0e0e0;
+        }
+        
+        .character-option.selected {
+            border-color: #4169E1;
+            background: #e8f0ff;
+            transform: scale(1.05);
+        }
+        
+        .character-option h3 {
+            margin: 10px 0 5px 0;
+            color: #333;
+            font-size: clamp(20px, 3vw, 28px);
+        }
+        
+        .character-option p {
+            margin: 0;
+            color: #666;
+            font-size: clamp(14px, 2vw, 18px);
+        }
+        
+        .character-option canvas {
+            border-radius: 10px;
+            background: white;
+        }
     </style>
 </head>
 <body>
@@ -243,6 +291,28 @@
                 </button>
             </div>
         </div>
+        <div id="characterSelect" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <h1 class="modal-title">Choose Your Robot!</h1>
+                <div class="character-grid">
+                    <div class="character-option" data-character="blue">
+                        <canvas id="bluePreview" width="150" height="200"></canvas>
+                        <h3>Toby</h3>
+                        <p>The original blue robot</p>
+                    </div>
+                    <div class="character-option" data-character="green">
+                        <canvas id="greenPreview" width="150" height="200"></canvas>
+                        <h3>Eco</h3>
+                        <p>The green nature robot</p>
+                    </div>
+                    <div class="character-option" data-character="red">
+                        <canvas id="redPreview" width="150" height="200"></canvas>
+                        <h3>Blaze</h3>
+                        <p>The red speed robot</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -276,10 +346,33 @@
         let canRestart = false;
         let animationId = null;
         let lastTime = 0;
+        let selectedCharacter = 'blue'; // Default character
+        
+        // Character definitions
+        const characters = {
+            blue: {
+                name: 'Toby',
+                bodyColor: '#4169E1',
+                headColor: '#6495ED',
+                letter: 'T'
+            },
+            green: {
+                name: 'Eco',
+                bodyColor: '#228B22',
+                headColor: '#32CD32',
+                letter: 'E'
+            },
+            red: {
+                name: 'Blaze',
+                bodyColor: '#DC143C',
+                headColor: '#FF6347',
+                letter: 'B'
+            }
+        };
 
         // Robot class
         class Robot {
-            constructor() {
+            constructor(characterType = 'blue') {
                 this.x = 100;
                 this.y = 0;
                 this.width = 50;
@@ -288,7 +381,7 @@
                 this.gravity = 0.8;
                 this.jumpPower = -18;
                 this.grounded = true;
-                this.color = '#4169E1';
+                this.character = characters[characterType];
                 this.eyeBlink = 0;
                 this.groundY = 0;
                 this.legAnimation = 0;
@@ -333,8 +426,30 @@
                 }
                 const yPos = this.y - bounceOffset * s;
                 
+                // Draw unique features based on character
+                if (this.character.name === 'Eco') {
+                    // Draw antenna for green robot
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(this.x * s + 23 * s, yPos - 40 * s, 4 * s, 10 * s);
+                    ctx.fillStyle = '#FFFF00';
+                    ctx.beginPath();
+                    ctx.arc(this.x * s + 25 * s, yPos - 42 * s, 6 * s, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.character.name === 'Blaze') {
+                    // Draw spikes for red robot
+                    ctx.fillStyle = '#8B0000';
+                    // Back spikes
+                    for (let i = 0; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x * s + this.width * s, yPos + 10 * s + i * 20 * s);
+                        ctx.lineTo(this.x * s + this.width * s + 10 * s, yPos + 20 * s + i * 20 * s);
+                        ctx.lineTo(this.x * s + this.width * s, yPos + 30 * s + i * 20 * s);
+                        ctx.fill();
+                    }
+                }
+                
                 // Animated legs (draw from body position to ensure no gap)
-                ctx.fillStyle = '#6495ED';
+                ctx.fillStyle = this.character.headColor;
                 const legOffset1 = Math.sin(this.legAnimation) * 5;
                 const legOffset2 = Math.sin(this.legAnimation + Math.PI) * 5;
                 
@@ -349,7 +464,7 @@
                 }
                 
                 // Right arm (behind body)
-                ctx.fillStyle = '#6495ED';
+                ctx.fillStyle = this.character.headColor;
                 const armOffset = Math.sin(this.legAnimation + Math.PI) * 5; // Offset from legs for natural motion
                 
                 if (this.grounded && gameRunning) {
@@ -361,11 +476,11 @@
                 }
                 
                 // Body
-                ctx.fillStyle = this.color;
+                ctx.fillStyle = this.character.bodyColor;
                 ctx.fillRect(this.x * s, yPos, this.width * s, this.height * s);
                 
                 // Left arm (in front of body)
-                ctx.fillStyle = '#6495ED';
+                ctx.fillStyle = this.character.headColor;
                 if (this.grounded && gameRunning) {
                     // Left arm (front) - vertical orientation, horizontal movement
                     ctx.fillRect(this.x * s - 5 * s + armOffset * s, yPos + 10 * s, 10 * s, 30 * s);
@@ -375,7 +490,7 @@
                 }
 
                 // Head
-                ctx.fillStyle = '#6495ED';
+                ctx.fillStyle = this.character.headColor;
                 ctx.fillRect(this.x * s + 5 * s, yPos - 30 * s, 40 * s, 30 * s);
 
                 // Eyes
@@ -383,12 +498,12 @@
                 ctx.fillRect(this.x * s + 12 * s, yPos - 20 * s, 8 * s, this.eyeBlink > 0 ? 2 * s : 8 * s);
                 ctx.fillRect(this.x * s + 30 * s, yPos - 20 * s, 8 * s, this.eyeBlink > 0 ? 2 * s : 8 * s);
                 
-                // Draw "T" on the body
+                // Draw letter on the body
                 ctx.fillStyle = '#FFF';
                 ctx.font = `bold ${25 * s}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('T', this.x * s + this.width * s / 2, yPos + this.height * s / 2);
+                ctx.fillText(this.character.letter, this.x * s + this.width * s / 2, yPos + this.height * s / 2);
             }
         }
 
@@ -439,7 +554,7 @@
         }
 
         // Game objects
-        const robot = new Robot();
+        let robot = new Robot(selectedCharacter);
         const obstacles = [];
         let obstacleTimer = 0;
         
@@ -585,14 +700,24 @@
                         <div style="color: #333; font-size: clamp(20px, 3vw, 28px); margin: 10px 0;">
                             Great job! You scored <strong style="color: #4169E1;">${score}</strong> points!
                         </div>
-                        <div style="color: #666; font-size: clamp(16px, 2.5vw, 20px); margin-top: 20px;">
-                            Tap anywhere to play again
+                        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 30px; flex-wrap: wrap;">
+                            <button class="modal-button" onclick="restartGame()">Play Again!</button>
+                            <button class="modal-button" style="background: #666;" onclick="showCharacterSelect()">Change Robot</button>
                         </div>
                     </div>
                 </div>
             `;
         }
 
+        // Show character selection from game over
+        function showCharacterSelect() {
+            messageEl.style.cssText = '';
+            messageEl.className = '';
+            messageEl.innerHTML = '';
+            characterSelectEl.style.display = 'flex';
+            canRestart = false;
+        }
+        
         // Restart game
         function restartGame() {
             score = 0;
@@ -627,23 +752,19 @@
 
         // Touch controls - use touchstart for immediate response
         document.addEventListener('touchstart', (e) => {
-            e.preventDefault();
             if (gameRunning) {
+                e.preventDefault();
                 robot.jump();
                 tapToJumpEl.style.display = 'none';
-            } else if (canRestart) {
-                restartGame();
             }
         });
         
         // Mouse controls as fallback
         document.addEventListener('mousedown', (e) => {
-            e.preventDefault();
             if (gameRunning) {
+                e.preventDefault();
                 robot.jump();
                 tapToJumpEl.style.display = 'none';
-            } else if (canRestart) {
-                restartGame();
             }
         });
 
@@ -671,8 +792,83 @@
             }, 3000);
         }
         
-        // Start button click handler
-        startButtonEl.addEventListener('click', startGame);
+        // Character selection
+        const characterSelectEl = document.getElementById('characterSelect');
+        const characterOptions = document.querySelectorAll('.character-option');
+        
+        // Draw robot preview
+        function drawRobotPreview(canvasId, characterType) {
+            const previewCanvas = document.getElementById(canvasId);
+            const previewCtx = previewCanvas.getContext('2d');
+            const char = characters[characterType];
+            const scale = 1.5;
+            
+            previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            
+            // Body
+            previewCtx.fillStyle = char.bodyColor;
+            previewCtx.fillRect(50, 80, 50 * scale, 60 * scale);
+            
+            // Head
+            previewCtx.fillStyle = char.headColor;
+            previewCtx.fillRect(55, 50, 40 * scale, 30 * scale);
+            
+            // Eyes
+            previewCtx.fillStyle = '#FFF';
+            previewCtx.fillRect(62, 60, 8 * scale, 8 * scale);
+            previewCtx.fillRect(80, 60, 8 * scale, 8 * scale);
+            
+            // Arms
+            previewCtx.fillStyle = char.headColor;
+            previewCtx.fillRect(40, 90, 10 * scale, 30 * scale);
+            previewCtx.fillRect(100, 90, 10 * scale, 30 * scale);
+            
+            // Legs
+            previewCtx.fillRect(60, 170, 10 * scale, 20 * scale);
+            previewCtx.fillRect(80, 170, 10 * scale, 20 * scale);
+            
+            // Letter
+            previewCtx.fillStyle = '#FFF';
+            previewCtx.font = 'bold 25px Arial';
+            previewCtx.textAlign = 'center';
+            previewCtx.textBaseline = 'middle';
+            previewCtx.fillText(char.letter, 75, 110);
+        }
+        
+        // Initialize previews
+        drawRobotPreview('bluePreview', 'blue');
+        drawRobotPreview('greenPreview', 'green');
+        drawRobotPreview('redPreview', 'red');
+        
+        // Character selection handlers
+        characterOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                characterOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedCharacter = option.dataset.character;
+                
+                // Create new robot with selected character
+                robot = new Robot(selectedCharacter);
+                
+                // Hide character select and start game
+                characterSelectEl.style.display = 'none';
+                startGame();
+            });
+        });
+        
+        // Start button click handler - show character selection
+        startButtonEl.addEventListener('click', () => {
+            startScreenEl.style.display = 'none';
+            characterSelectEl.style.display = 'flex';
+            
+            // Pre-select the current character
+            characterOptions.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.character === selectedCharacter) {
+                    opt.classList.add('selected');
+                }
+            });
+        });
     </script>
 </body>
 </html>
