@@ -6,256 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Toby's Robo-Runner</title>
-    <style>
-        * {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: none;
-        }
-        
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
-            font-family: -apple-system, Arial, sans-serif;
-        }
-        
-        #gameContainer {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        #gameCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            background: linear-gradient(to bottom, #87CEEB, #98FB98);
-        }
-        
-        #gameInfo {
-            position: absolute;
-            top: env(safe-area-inset-top, 20px);
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            padding: 10px;
-            z-index: 10;
-        }
-        
-        #score {
-            background: rgba(0,0,0,0.3);
-            padding: 5px 15px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-        
-        #message {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        #tapToJump {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 20px;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            background: rgba(0,0,0,0.3);
-            padding: 10px 20px;
-            border-radius: 20px;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        @media (orientation: landscape) {
-            #gameInfo { font-size: 20px; }
-            #tapToJump { font-size: 18px; }
-        }
-        
-        /* Modal container styles */
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #87CEEB;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 20px 40px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            max-width: 90%;
-            max-height: 85%;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .modal-title {
-            color: #4169E1;
-            font-size: clamp(28px, 5vw, 48px);
-            margin: 0;
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
-        
-        .modal-button {
-            background: #4169E1;
-            color: white;
-            font-size: clamp(20px, 3vw, 32px);
-            padding: 15px 40px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transform: scale(1);
-            transition: transform 0.1s;
-        }
-        
-        .modal-button:hover {
-            transform: scale(1.1);
-        }
-        
-        .modal-button:active {
-            transform: scale(0.95);
-        }
-        
-        /* Landscape-specific modal layout */
-        @media (orientation: landscape) {
-            .modal-content {
-                flex-direction: column;
-                padding: 20px 30px;
-            }
-            
-            .instructions-container {
-                display: flex;
-                flex-direction: row;
-                gap: 30px;
-                align-items: flex-start;
-                justify-content: center;
-                flex-wrap: nowrap;
-            }
-            
-            .instruction-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 10px;
-                font-size: clamp(14px, 2vw, 20px);
-                text-align: center;
-                flex: 1;
-                min-width: 0;
-            }
-            
-            .instruction-item span:first-child {
-                font-size: 2.5em;
-            }
-        }
-        
-        /* Portrait-specific modal layout */
-        @media (orientation: portrait) {
-            .instructions-container {
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .instruction-item {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 15px;
-                font-size: clamp(18px, 3vw, 24px);
-            }
-            
-            .instruction-item span:first-child {
-                font-size: 1.5em;
-            }
-        }
-        
-        /* Character selection styles */
-        .character-grid {
-            display: flex;
-            gap: 30px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            margin: 20px 0;
-        }
-        
-        .character-option {
-            background: #f0f0f0;
-            border-radius: 15px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            border: 3px solid transparent;
-        }
-        
-        .character-option:hover {
-            transform: scale(1.05);
-            background: #e0e0e0;
-        }
-        
-        .character-option.selected {
-            border-color: #4169E1;
-            background: #e8f0ff;
-            transform: scale(1.05);
-        }
-        
-        .character-option h3 {
-            margin: 10px 0 5px 0;
-            color: #333;
-            font-size: clamp(20px, 3vw, 28px);
-        }
-        
-        .character-option p {
-            margin: 0;
-            color: #666;
-            font-size: clamp(14px, 2vw, 18px);
-        }
-        
-        .character-option canvas {
-            border-radius: 10px;
-            background: white;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="gameContainer">
@@ -296,17 +47,17 @@
                 <h1 class="modal-title">Choose Your Robot!</h1>
                 <div class="character-grid">
                     <div class="character-option" data-character="blue">
-                        <canvas id="bluePreview" width="150" height="200"></canvas>
+                        <canvas id="bluePreview" width="100" height="120"></canvas>
                         <h3>Toby</h3>
                         <p>The original blue robot</p>
                     </div>
                     <div class="character-option" data-character="green">
-                        <canvas id="greenPreview" width="150" height="200"></canvas>
+                        <canvas id="greenPreview" width="100" height="120"></canvas>
                         <h3>Eco</h3>
                         <p>The green nature robot</p>
                     </div>
                     <div class="character-option" data-character="red">
-                        <canvas id="redPreview" width="150" height="200"></canvas>
+                        <canvas id="redPreview" width="100" height="120"></canvas>
                         <h3>Blaze</h3>
                         <p>The red speed robot</p>
                     </div>
@@ -796,43 +547,69 @@
         const characterSelectEl = document.getElementById('characterSelect');
         const characterOptions = document.querySelectorAll('.character-option');
         
-        // Draw robot preview
+        // Draw robot preview - matching exact game appearance
         function drawRobotPreview(canvasId, characterType) {
             const previewCanvas = document.getElementById(canvasId);
             const previewCtx = previewCanvas.getContext('2d');
             const char = characters[characterType];
-            const scale = 1.5;
+            const s = 0.8; // Smaller scale for preview
+            const x = 25; // Starting x position
+            const y = 40; // Starting y position
             
             previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
             
+            // Draw unique features for Eco and Blaze
+            if (char.name === 'Eco') {
+                // Antenna
+                previewCtx.fillStyle = '#333';
+                previewCtx.fillRect(x + 23 * s, y - 40 * s, 4 * s, 10 * s);
+                previewCtx.fillStyle = '#FFFF00';
+                previewCtx.beginPath();
+                previewCtx.arc(x + 25 * s, y - 42 * s, 6 * s, 0, Math.PI * 2);
+                previewCtx.fill();
+            } else if (char.name === 'Blaze') {
+                // Spikes
+                previewCtx.fillStyle = '#8B0000';
+                for (let i = 0; i < 3; i++) {
+                    previewCtx.beginPath();
+                    previewCtx.moveTo(x + 50 * s, y + 10 * s + i * 20 * s);
+                    previewCtx.lineTo(x + 50 * s + 10 * s, y + 20 * s + i * 20 * s);
+                    previewCtx.lineTo(x + 50 * s, y + 30 * s + i * 20 * s);
+                    previewCtx.fill();
+                }
+            }
+            
+            // Legs
+            previewCtx.fillStyle = char.headColor;
+            previewCtx.fillRect(x + 10 * s, y + 60 * s, 10 * s, 20 * s);
+            previewCtx.fillRect(x + 30 * s, y + 60 * s, 10 * s, 20 * s);
+            
+            // Right arm (behind body)
+            previewCtx.fillRect(x + 45 * s, y + 10 * s, 10 * s, 30 * s);
+            
             // Body
             previewCtx.fillStyle = char.bodyColor;
-            previewCtx.fillRect(50, 80, 50 * scale, 60 * scale);
+            previewCtx.fillRect(x, y, 50 * s, 60 * s);
+            
+            // Left arm (in front)
+            previewCtx.fillStyle = char.headColor;
+            previewCtx.fillRect(x - 5 * s, y + 10 * s, 10 * s, 30 * s);
             
             // Head
             previewCtx.fillStyle = char.headColor;
-            previewCtx.fillRect(55, 50, 40 * scale, 30 * scale);
+            previewCtx.fillRect(x + 5 * s, y - 30 * s, 40 * s, 30 * s);
             
-            // Eyes
+            // Eyes (facing right)
             previewCtx.fillStyle = '#FFF';
-            previewCtx.fillRect(62, 60, 8 * scale, 8 * scale);
-            previewCtx.fillRect(80, 60, 8 * scale, 8 * scale);
+            previewCtx.fillRect(x + 12 * s, y - 20 * s, 8 * s, 8 * s);
+            previewCtx.fillRect(x + 30 * s, y - 20 * s, 8 * s, 8 * s);
             
-            // Arms
-            previewCtx.fillStyle = char.headColor;
-            previewCtx.fillRect(40, 90, 10 * scale, 30 * scale);
-            previewCtx.fillRect(100, 90, 10 * scale, 30 * scale);
-            
-            // Legs
-            previewCtx.fillRect(60, 170, 10 * scale, 20 * scale);
-            previewCtx.fillRect(80, 170, 10 * scale, 20 * scale);
-            
-            // Letter
+            // Letter on body
             previewCtx.fillStyle = '#FFF';
-            previewCtx.font = 'bold 25px Arial';
+            previewCtx.font = `bold ${25 * s}px Arial`;
             previewCtx.textAlign = 'center';
             previewCtx.textBaseline = 'middle';
-            previewCtx.fillText(char.letter, 75, 110);
+            previewCtx.fillText(char.letter, x + 25 * s, y + 30 * s);
         }
         
         // Initialize previews
