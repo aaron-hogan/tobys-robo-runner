@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  tobys-robo-runner:
+    build: .
+    container_name: tobys-robo-runner
+    ports:
+      - "8080:80"
+    restart: unless-stopped
